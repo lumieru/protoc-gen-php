@@ -1,0 +1,17 @@
+// See README.txt for information and build instructions.
+
+package SDServer;
+
+message Response {
+  required uint32 code = 1;
+  optional uint32 gid = 2;
+  optional string uid = 3;
+  optional uint32 vc = 4;
+  optional uint32 pvg = 5;
+  optional uint32 eg = 6;
+  optional uint32 et = 7;
+  optional bytes  bb = 8;
+  optional uint32 bv = 9;
+  optional uint32 error_code = 10;
+  optional string error_msg = 11;
+}
