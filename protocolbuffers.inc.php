@@ -8,6 +8,8 @@ define('EXP_CODE_READ_ERROR', 0x8f000002);
 define('EXP_CODE_WRITE_ERROR', 0x8f000003);
 define('EXP_CODE_SEEK_ERROR', 0x8f000004);
 define('EXP_CODE_UNSUPPORTED_WIRE_TYPE', 0x8f000005);
+define('EXP_CODE_INVALID_PARAMETER', 0x8f000006);
+define('EXP_CODE_MISS_REQUIRED_FIELDS', 0x8f000007);
 	
 class ProtobufEnum {
 
@@ -35,20 +37,6 @@ class ProtobufMessage {
 			if (isset($str))
 				fclose($fp);
 		}
-	}
-}
-
-/**
-	To store binary
-*/
-class ProtobufByteString{
-	
-	public $string = null;
-	public $length = 0;
-	
-	public function __construct($bytes, $len){
-		$string = $bytes;
-		$length = $len;
 	}
 }	
 	
@@ -180,33 +168,9 @@ class Protobuf {
 	public static function read_int32 ($fp){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
 	public static function read_zint32($fp){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
 	public static function read_zint64($fp){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
-
-	/**
-	 * Reads bytes from $fp
-	 */
-	public static function read_bytes ($fp, &$limit = null){
-		
-		$len = Protobuf::read_varint($fp, $limit);
-		if ($len === false)
-            throw new Exception(__METHOD__, EXP_CODE_READ_ERROR);
-		
-		if ($len > 0){
-            $tmp = fread($fp, $len);
-			if ($tmp === false){
-				throw new Exception(__METHOD__, EXP_CODE_READ_ERROR);
-			}
-		}
-		else
-            $tmp = '';
-		
-		$limit-=$len;
-		
-		return new ProtobufByteString($tmp, $len);
-		
-	}
 	
 	/**
-	 * Read string
+	 * Read string or bytes (since strlen is safe for binary data)
 	 */
 	public static function read_string ($fp, &$limit = null){
 		
@@ -262,22 +226,9 @@ class Protobuf {
 	public static function write_int32 ($fp, $i){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
 	public static function write_zint32($fp, $i){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
 	public static function write_zint64($fp, $i){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
-
-	/**
-	 * Write bytes
-	 */
-	public static function write_bytes ($fp, $b){
-		
-		Protobuf::write_varint($fp, $b->$length));
-		if( fwrite($fp, $b->$string) !== $b->$length )
-			throw new Exception(__METHOD__, EXP_CODE_WRITE_ERROR);
-		
-		return $b->$length;
-		
-	}
 	
 	/**
-	 * Write string
+	 * Write string or bytes (since strlen is safe for binary data)
 	 */
 	public static function write_string ($fp, $s){
 		

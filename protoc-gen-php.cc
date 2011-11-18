@@ -167,9 +167,9 @@ string PHPCodeGenerator::DefaultValueAsString(const FieldDescriptor & field, boo
     case FieldDescriptor::CPPTYPE_STRING:
       if (quote_string_type)
         return "\"" + CEscape(field.default_value_string()) + "\"";
-
+        
       if (field.type() == FieldDescriptor::TYPE_BYTES)
-        return "null";
+        return CEscape(field.default_value_string()); 
 
       return field.default_value_string();
 
@@ -251,7 +251,7 @@ void PHPCodeGenerator::PrintMessageRead(io::Printer &printer, const Descriptor &
 			case FieldDescriptor::TYPE_UINT32: // uint32, varint on the wire
 			case FieldDescriptor::TYPE_ENUM:   // Enum, varint on the wire
 				commands = "ASSERT('$wire == 0');\n"
-						   "$this->`var` = `ns`Protobuf::read_varint($fp, $limit);\n"
+						   "$this->`var` = `ns`Protobuf::read_varint($fp, $limit);\n";
 				break;
 
 			case FieldDescriptor::TYPE_FIXED64: // uint64, exactly eight bytes on the wire.
@@ -285,13 +285,9 @@ void PHPCodeGenerator::PrintMessageRead(io::Printer &printer, const Descriptor &
 				break;
 
 			case FieldDescriptor::TYPE_STRING:  // UTF-8 text.
-				commands =  "ASSERT('$wire == 2');\n"
-							"$this->`var` = `ns`Protobuf::read_bytes($fp, $limit);\n"
-				break;
-				
 			case FieldDescriptor::TYPE_BYTES:   // Arbitrary byte array.	
 				commands =  "ASSERT('$wire == 2');\n"
-							"$this->`var` = `ns`Protobuf::read_bytes($fp, $limit);\n"
+							"$this->`var` = `ns`Protobuf::read_string($fp, $limit);\n";
 				break;
 
 			case FieldDescriptor::TYPE_GROUP: {// Tag-delimited message.  Deprecated.
@@ -363,7 +359,7 @@ void PHPCodeGenerator::PrintMessageRead(io::Printer &printer, const Descriptor &
 	printer.Outdent();
 	printer.Print(
 		"  if (!$this->validateRequired())\n"
-		"    throw new Exception('Required fields are missing');\n"
+		"    throw new Exception('Required fields are missing', EXP_CODE_MISS_REQUIRED_FIELDS);\n"
 		"}\n"
 	);
 }
@@ -437,7 +433,7 @@ void PHPCodeGenerator::PrintMessageWrite(io::Printer &printer, const Descriptor 
 
 	printer.Print(
 		"if (!$this->validateRequired())\n"
-		"  throw new Exception('Required fields are missing');\n"
+		"  throw new Exception('Required fields are missing', EXP_CODE_MISS_REQUIRED_FIELDS);\n"
 	);
 
 	for (int i = 0; i < message.field_count(); ++i) {
@@ -494,11 +490,8 @@ void PHPCodeGenerator::PrintMessageWrite(io::Printer &printer, const Descriptor 
 				break;
 
 			case FieldDescriptor::TYPE_STRING:  // UTF-8 text.
+			case FieldDescriptor::TYPE_BYTES:   // Arbitrary byte array.
 				commands = "`ns`Protobuf::write_string($fp, `var`);\n";
-				break;
-				
-			case FieldDescriptor::TYPE_BYTES:   // Arbitrary byte array.	
-				commands =	"`ns`Protobuf::write_bytes($fp, `var`);\n";
 				break;
 
 			case FieldDescriptor::TYPE_GROUP: {// Tag-delimited message.  Deprecated.
@@ -748,7 +741,7 @@ void PHPCodeGenerator::PrintMessage(io::Printer &printer, const Descriptor & mes
 		"    } else if (is_resource($in)) {\n"
 		"      $fp = $in;\n"
 		"    } else {\n"
-		"      throw new Exception('Invalid in parameter');\n"
+		"      throw new Exception('Invalid in parameter', EXP_CODE_INVALID_PARAMETER);\n"
 		"    }\n"
 		"    $this->read($fp, $limit);\n"
 		"  }\n"
