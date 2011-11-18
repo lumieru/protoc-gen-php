@@ -165,7 +165,7 @@ class SDServer_Response {
       $size += 1 + Protobuf::size_varint($this->et_);
     }
     if (!is_null($this->bb_)) {
-      $l = $this->bb_->$length;
+      $l = strlen($this->bb_);
       $size += 1 + Protobuf::size_varint($l) + $l;
     }
     if (!is_null($this->bv_)) {
