@@ -603,8 +603,6 @@ void PHPCodeGenerator::PrintMessageSize(io::Printer &printer, const Descriptor &
 			case WireFormatLite::WIRETYPE_LENGTH_DELIMITED:
 				if (field.type() == FieldDescriptor::TYPE_MESSAGE) {
 					command = "$l = `var`->size();\n";
-				} else if(field.type() == FieldDescriptor::TYPE_BYTES) {
-					command = "$l = `var`->$length;\n";
 				} else {
 					command = "$l = strlen(`var`);\n";
 				}

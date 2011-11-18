@@ -234,10 +234,10 @@ class Protobuf {
 		
 		$len = strlen($s);
 		Protobuf::write_varint($fp, $len);
-		if( fwrite($fp, $b->$string) !== $len )
+		if( fwrite($fp, $s) !== $len )
 			throw new Exception(__METHOD__, EXP_CODE_WRITE_ERROR);
 		
-		return $b->$length;
+		return $len;
 		
 	}
 	
