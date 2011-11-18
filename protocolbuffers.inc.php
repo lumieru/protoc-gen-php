@@ -1,5 +1,14 @@
 <?php
 
+/**
+	Constants
+ */
+define('EXP_CODE_NOT_IMPLEMENTED', 0x8f000001);
+define('EXP_CODE_READ_ERROR', 0x8f000002);
+define('EXP_CODE_WRITE_ERROR', 0x8f000003);
+define('EXP_CODE_SEEK_ERROR', 0x8f000004);
+define('EXP_CODE_UNSUPPORTED_WIRE_TYPE', 0x8f000005);
+	
 class ProtobufEnum {
 
 	public static function toString($value) {
@@ -29,6 +38,20 @@ class ProtobufMessage {
 	}
 }
 
+/**
+	To store binary
+*/
+class ProtobufByteString{
+	
+	public $string = null;
+	public $length = 0;
+	
+	public function __construct($bytes, $len){
+		$string = $bytes;
+		$length = $len;
+	}
+}	
+	
 /**
  * Class to aid in the parsing and creating of Protocol Buffer Messages
  * This class should be included by the developer before they use a
@@ -120,7 +143,7 @@ class Protobuf {
 		do { // Keep reading until we find the last byte
 			$b = fread($fp, 1);
 			if ($b === false)
-				throw new Exception("read_varint(): Error reading byte");
+				throw new Exception(__METHOD__, EXP_CODE_READ_ERROR);
 			if (strlen($b) < 1)
 				break;
 
@@ -129,9 +152,11 @@ class Protobuf {
 		} while ($b >= "\x80");
 
 		if ($len == 0) {
+		/**
 			if (feof($fp))
 				return false;
-			throw new Exception("read_varint(): Error reading byte");
+		 */
+			throw new Exception(__METHOD__, EXP_CODE_READ_ERROR);
 		}
 
 		if ($limit !== null)
@@ -147,15 +172,63 @@ class Protobuf {
 		return $i;
 	}
 
-	public static function read_double($fp){throw "I've not coded it yet Exception";}
-	public static function read_float ($fp){throw "I've not coded it yet Exception";}
-	public static function read_uint64($fp){throw "I've not coded it yet Exception";}
-	public static function read_int64 ($fp){throw "I've not coded it yet Exception";}
-	public static function read_uint32($fp){throw "I've not coded it yet Exception";}
-	public static function read_int32 ($fp){throw "I've not coded it yet Exception";}
-	public static function read_zint32($fp){throw "I've not coded it yet Exception";}
-	public static function read_zint64($fp){throw "I've not coded it yet Exception";}
+	public static function read_double($fp){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function read_float ($fp){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function read_uint64($fp){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function read_int64 ($fp){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function read_uint32($fp){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function read_int32 ($fp){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function read_zint32($fp){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function read_zint64($fp){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
 
+	/**
+	 * Reads bytes from $fp
+	 */
+	public static function read_bytes ($fp, &$limit = null){
+		
+		$len = Protobuf::read_varint($fp, $limit);
+		if ($len === false)
+            throw new Exception(__METHOD__, EXP_CODE_READ_ERROR);
+		
+		if ($len > 0){
+            $tmp = fread($fp, $len);
+			if ($tmp === false){
+				throw new Exception(__METHOD__, EXP_CODE_READ_ERROR);
+			}
+		}
+		else
+            $tmp = '';
+		
+		$limit-=$len;
+		
+		return new ProtobufByteString($tmp, $len);
+		
+	}
+	
+	/**
+	 * Read string
+	 */
+	public static function read_string ($fp, &$limit = null){
+		
+		$len = Protobuf::read_varint($fp, $limit);
+		if ($len === false)
+            throw new Exception(__METHOD__, EXP_CODE_READ_ERROR);
+		
+		if ($len > 0){
+            $tmp = fread($fp, $len);
+			if ($tmp === false){
+				throw new Exception(__METHOD__, EXP_CODE_READ_ERROR);
+			}
+		}
+		else
+            $tmp = '';
+		
+		$limit-=$len;
+		
+		return $tmp;
+		
+	}
+	
 	/**
 	 * Writes a varint to $fp
 	 * returns the number of bytes written
@@ -173,7 +246,7 @@ class Protobuf {
 				$v |= 0x80;
 
 			if (fwrite($fp, chr($v)) !== 1)
-				throw new Exception("write_varint(): Error writing byte");
+				throw new Exception(__METHOD__, EXP_CODE_WRITE_ERROR);
 
 			$len++;
 		} while ($i != 0);
@@ -181,15 +254,42 @@ class Protobuf {
 		return $len;
 	}
 
-	public static function write_double($fp, $d){throw "I've not coded it yet Exception";}
-	public static function write_float ($fp, $f){throw "I've not coded it yet Exception";}
-	public static function write_uint64($fp, $i){throw "I've not coded it yet Exception";}
-	public static function write_int64 ($fp, $i){throw "I've not coded it yet Exception";}
-	public static function write_uint32($fp, $i){throw "I've not coded it yet Exception";}
-	public static function write_int32 ($fp, $i){throw "I've not coded it yet Exception";}
-	public static function write_zint32($fp, $i){throw "I've not coded it yet Exception";}
-	public static function write_zint64($fp, $i){throw "I've not coded it yet Exception";}
+	public static function write_double($fp, $d){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function write_float ($fp, $f){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function write_uint64($fp, $i){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function write_int64 ($fp, $i){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function write_uint32($fp, $i){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function write_int32 ($fp, $i){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function write_zint32($fp, $i){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
+	public static function write_zint64($fp, $i){throw new Exception(__METHOD__, EXP_CODE_NOT_IMPLEMENTED);}
 
+	/**
+	 * Write bytes
+	 */
+	public static function write_bytes ($fp, $b){
+		
+		Protobuf::write_varint($fp, $b->$length));
+		if( fwrite($fp, $b->$string) !== $b->$length )
+			throw new Exception(__METHOD__, EXP_CODE_WRITE_ERROR);
+		
+		return $b->$length;
+		
+	}
+	
+	/**
+	 * Write string
+	 */
+	public static function write_string ($fp, $s){
+		
+		$len = strlen($s);
+		Protobuf::write_varint($fp, $len);
+		if( fwrite($fp, $b->$string) !== $len )
+			throw new Exception(__METHOD__, EXP_CODE_WRITE_ERROR);
+		
+		return $b->$length;
+		
+	}
+	
 	/**
 	 * Seek past a varint
 	 */
@@ -198,7 +298,7 @@ class Protobuf {
 		do { // Keep reading until we find the last byte
 			$b = fread($fp, 1);
 			if ($b === false)
-				throw new Exception("skip(varint): Error reading byte");
+				throw new Exception(__METHOD__, EXP_CODE_READ_ERROR);
 			$len++;
 		} while ($b >= "\x80");
 		return $len;
@@ -214,14 +314,14 @@ class Protobuf {
 
 			case 1: // 64bit
 				if (fseek($fp, 8, SEEK_CUR) === -1)
-					throw new Exception('skip(' . ProtoBuf::get_wiretype(1) . '): Error seeking');
+					throw new Exception(__METHOD__ . ProtoBuf::get_wiretype(1), EXP_CODE_SEEK_ERROR);
 				return 8;
 
 			case 2: // length delimited
 				$varlen = 0;
 				$len = Protobuf::read_varint($fp, $varlen);
 				if (fseek($fp, $len, SEEK_CUR) === -1)
-					throw new Exception('skip(' . ProtoBuf::get_wiretype(2) . '): Error seeking');
+					throw new Exception(__METHOD__ . ProtoBuf::get_wiretype(2), EXP_CODE_SEEK_ERROR);
 				return $len - $varlen;
 
 			//case 3: // Start group TODO we must keep looping until we find the closing end grou
@@ -231,11 +331,11 @@ class Protobuf {
 
 			case 5: // 32bit
 				if (fseek($fp, 4, SEEK_CUR) === -1)
-					throw new Exception('skip('. ProtoBuf::get_wiretype(5) . '): Error seeking');
+					throw new Exception(__METHOD__ . ProtoBuf::get_wiretype(5), EXP_CODE_SEEK_ERROR);
 				return 4;
 
 			default:
-				throw new Exception('skip('. ProtoBuf::get_wiretype($wire_type) . '): Unsupported wire_type');
+				throw new Exception(__METHOD__ . ProtoBuf::get_wiretype($wire_type), EXP_CODE_UNSUPPORTED_WIRE_TYPE);
 		}
 	}
 
@@ -266,7 +366,7 @@ class Protobuf {
 				return fread($fp, 4);
 
 			default:
-				throw new Exception('read_unknown('. ProtoBuf::get_wiretype($wire_type) . '): Unsupported wire_type');
+				throw new Exception(__METHOD__ . ProtoBuf::get_wiretype($wire_type), EXP_CODE_UNSUPPORTED_WIRE_TYPE);
 		}
 	}
 
